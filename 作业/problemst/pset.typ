@@ -28,6 +28,27 @@
       },
     )
 
+    #show heading: it => {
+      set text(size: 11pt, weight: "regular")
+      
+      let num = none
+      if it.numbering != none {
+        num = counter(heading).display(it.numbering)
+      }
+      
+      let heading_content = if it.level == 1 {
+        strong[#if num != none [#num ]#it.body]
+      } else {
+        [#strong[#if num != none [#num ]]#it.body]
+      }
+      
+      block(
+        above: 1.2em,
+        below: 1.2em,
+        heading_content
+      )
+    }
+
     /* Set metadata */
     #set document(title: title, author: student, date: date)
 
@@ -75,18 +96,26 @@
         // v(0.8em)
         text(size: 1.05em, style: "italic", fill: luma(30%))[
           #date.display("[year]-[month]-[day]")
-          #if collaborators != none {
-            [
-              \ Collaborators: #collaborators
-            ]
-          }
         ]
-        v(0.6em)
+        // v(0.6em)
         box(line(length: 100%, stroke: 0.8pt))
-        v(1.2em)
+        // v(1.2em)
       },
     )
 
     #doc
   ]
+}
+
+// Exportable functions for manual decorators
+#let framed(body) = {
+  block(
+    width: 100%,
+    inset: (left: 0.8em, top: 0.6em, bottom: 0.6em, right: 0.5em),
+    stroke: (left: 3pt + rgb("a9a9b3")),
+    fill: rgb("f7f7f9"),
+    above: 1.2em,
+    below: 1.2em,
+    body
+  )
 }
