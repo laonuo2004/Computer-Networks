@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <g stroke="#333333" stroke-width="4" stroke-linecap="round">
+    <line x1="120" y1="90" x2="320" y2="90"/>
+    <line x1="120" y1="90" x2="120" y2="270"/>
+    <line x1="320" y1="90" x2="520" y2="90"/>
+    <line x1="320" y1="90" x2="320" y2="270"/>
+    <line x1="520" y1="90" x2="520" y2="270"/>
+    <line x1="120" y1="270" x2="320" y2="270"/>
+    <line x1="320" y1="270" x2="520" y2="270"/>
+  </g>
+
+  <g font-family="Arial, sans-serif" font-size="28" fill="#333333" text-anchor="middle">
+    <text x="220" y="75">1</text>
+    <text x="95" y="185">1</text>
+    <text x="420" y="75">1</text>
+    <text x="295" y="185">1</text>
+    <text x="545" y="185">1</text>
+    <text x="220" y="255">1</text>
+    <text x="420" y="255">1</text>
+  </g>
+
+  <g fill="#ffffff" stroke="#333333" stroke-width="4">
+    <circle cx="120" cy="90" r="36"/>
+    <circle cx="320" cy="90" r="36"/>
+    <circle cx="520" cy="90" r="36"/>
+    <circle cx="120" cy="270" r="36"/>
+    <circle cx="320" cy="270" r="36"/>
+    <circle cx="520" cy="270" r="36"/>
+  </g>
+
+  <g font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#222222" text-anchor="middle" dominant-baseline="middle">
+    <text x="120" y="90">A</text>
+    <text x="320" y="90">B</text>
+    <text x="520" y="90">C</text>
+    <text x="120" y="270">D</text>
+    <text x="320" y="270">E</text>
+    <text x="520" y="270">F</text>
+  </g>
+</svg>
