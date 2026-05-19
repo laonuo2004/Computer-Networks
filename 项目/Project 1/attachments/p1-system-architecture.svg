@@ -1,70 +1,74 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520">
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="390" viewBox="0 0 980 390">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
     </marker>
+    <marker id="soft-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#777"/>
+    </marker>
     <style>
       text { font-family: Arial, sans-serif; fill: #111; }
-      .box { fill: #ffffff; stroke: #333; stroke-width: 1.4; rx: 6; }
       .host { fill: #f7fbff; stroke: #2f80ed; stroke-width: 2; rx: 8; }
-      .sub { fill: #eef6ff; stroke: #6aa7e8; stroke-width: 1.2; rx: 5; }
-      .artifact { fill: #fff8e8; stroke: #c58b24; stroke-width: 1.2; rx: 5; }
-      .title { font-size: 19px; font-weight: 700; }
+      .box { fill: #ffffff; stroke: #6aa7e8; stroke-width: 1.3; rx: 5; }
+      .channel { fill: #fff8e8; stroke: #c58b24; stroke-width: 1.4; rx: 6; }
+      .host-title { font-size: 18px; font-weight: 700; }
       .label { font-size: 13px; }
       .small { font-size: 12px; }
       .line { stroke: #333; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-      .dash { stroke-dasharray: 6 5; }
+      .soft { stroke: #777; stroke-width: 1.4; fill: none; marker-end: url(#soft-arrow); stroke-dasharray: 6 5; }
     </style>
   </defs>
 
-  <text x="490" y="32" text-anchor="middle" class="title">Reliable File Transfer System over UDP</text>
+  <rect x="35" y="35" width="360" height="300" class="host"/>
+  <text x="215" y="66" text-anchor="middle" class="host-title">Host1</text>
 
-  <rect x="40" y="70" width="350" height="330" class="host"/>
-  <text x="215" y="100" text-anchor="middle" class="title">Host1</text>
-  <rect x="75" y="130" width="125" height="55" class="sub"/>
-  <text x="137" y="153" text-anchor="middle" class="label">Sender Thread</text>
-  <text x="137" y="171" text-anchor="middle" class="small">Go-Back-N window</text>
-  <rect x="230" y="130" width="125" height="55" class="sub"/>
-  <text x="292" y="153" text-anchor="middle" class="label">Receiver Thread</text>
-  <text x="292" y="171" text-anchor="middle" class="small">expected seq only</text>
-  <rect x="75" y="225" width="125" height="55" class="sub"/>
-  <text x="137" y="248" text-anchor="middle" class="label">Unreliable</text>
-  <text x="137" y="266" text-anchor="middle" class="small">Channel</text>
-  <rect x="230" y="225" width="125" height="55" class="sub"/>
-  <text x="292" y="248" text-anchor="middle" class="label">UDP Socket</text>
-  <text x="292" y="266" text-anchor="middle" class="small">127.0.0.1:41863</text>
-  <rect x="135" y="320" width="160" height="45" class="artifact"/>
-  <text x="215" y="348" text-anchor="middle" class="label">CSV logs</text>
+  <rect x="70" y="95" width="128" height="48" class="box"/>
+  <text x="134" y="123" text-anchor="middle" class="label">File Reader</text>
 
-  <rect x="590" y="70" width="350" height="330" class="host"/>
-  <text x="765" y="100" text-anchor="middle" class="title">Host2</text>
-  <rect x="625" y="130" width="125" height="55" class="sub"/>
-  <text x="687" y="153" text-anchor="middle" class="label">Sender Thread</text>
-  <text x="687" y="171" text-anchor="middle" class="small">Go-Back-N window</text>
-  <rect x="780" y="130" width="125" height="55" class="sub"/>
-  <text x="842" y="153" text-anchor="middle" class="label">Receiver Thread</text>
-  <text x="842" y="171" text-anchor="middle" class="small">expected seq only</text>
-  <rect x="625" y="225" width="125" height="55" class="sub"/>
-  <text x="687" y="248" text-anchor="middle" class="label">Unreliable</text>
-  <text x="687" y="266" text-anchor="middle" class="small">Channel</text>
-  <rect x="780" y="225" width="125" height="55" class="sub"/>
-  <text x="842" y="248" text-anchor="middle" class="label">UDP Socket</text>
-  <text x="842" y="266" text-anchor="middle" class="small">127.0.0.1:41864</text>
-  <rect x="685" y="320" width="160" height="45" class="artifact"/>
-  <text x="765" y="348" text-anchor="middle" class="label">CSV logs</text>
+  <rect x="232" y="95" width="128" height="48" class="box"/>
+  <text x="296" y="113" text-anchor="middle" class="label">GBN Sender</text>
+  <text x="296" y="131" text-anchor="middle" class="small">window, timer</text>
 
-  <path d="M200 157 L230 157" class="line"/>
-  <path d="M137 185 L137 225" class="line"/>
-  <path d="M200 252 L230 252" class="line"/>
-  <path d="M750 157 L780 157" class="line"/>
-  <path d="M687 185 L687 225" class="line"/>
-  <path d="M750 252 L780 252" class="line"/>
-  <path d="M355 252 C450 210, 530 210, 625 252" class="line"/>
-  <path d="M780 252 C680 300, 500 300, 355 252" class="line dash"/>
+  <rect x="70" y="205" width="128" height="48" class="box"/>
+  <text x="134" y="223" text-anchor="middle" class="label">PDU / CRC</text>
+  <text x="134" y="241" text-anchor="middle" class="small">encode</text>
 
-  <rect x="330" y="430" width="320" height="55" class="artifact"/>
-  <text x="490" y="454" text-anchor="middle" class="label">Log Analyzer</text>
-  <text x="490" y="474" text-anchor="middle" class="small">summary.csv, summary.md, throughput.svg, retransmit.svg</text>
-  <path d="M215 365 C260 420, 300 450, 330 457" class="line"/>
-  <path d="M765 365 C720 420, 680 450, 650 457" class="line"/>
+  <rect x="232" y="205" width="128" height="48" class="box"/>
+  <text x="296" y="223" text-anchor="middle" class="label">UDP Socket</text>
+  <text x="296" y="241" text-anchor="middle" class="small">41863</text>
+
+  <rect x="410" y="160" width="160" height="80" class="channel"/>
+  <text x="490" y="191" text-anchor="middle" class="label">Simulated</text>
+  <text x="490" y="211" text-anchor="middle" class="label">unreliable channel</text>
+
+  <rect x="585" y="35" width="360" height="300" class="host"/>
+  <text x="765" y="66" text-anchor="middle" class="host-title">Host2</text>
+
+  <rect x="620" y="95" width="128" height="48" class="box"/>
+  <text x="684" y="113" text-anchor="middle" class="label">UDP Socket</text>
+  <text x="684" y="131" text-anchor="middle" class="small">41864</text>
+
+  <rect x="782" y="95" width="128" height="48" class="box"/>
+  <text x="846" y="113" text-anchor="middle" class="label">PDU / CRC</text>
+  <text x="846" y="131" text-anchor="middle" class="small">check</text>
+
+  <rect x="620" y="205" width="128" height="48" class="box"/>
+  <text x="684" y="223" text-anchor="middle" class="label">GBN Receiver</text>
+  <text x="684" y="241" text-anchor="middle" class="small">expected seq</text>
+
+  <rect x="782" y="205" width="128" height="48" class="box"/>
+  <text x="846" y="233" text-anchor="middle" class="label">File Writer</text>
+
+  <path d="M198 119 L232 119" class="line"/>
+  <path d="M296 143 L296 174 L134 174 L134 205" class="line"/>
+  <path d="M198 229 L232 229" class="line"/>
+  <path d="M360 229 L410 229" class="line"/>
+  <path d="M748 119 L782 119" class="line"/>
+  <path d="M846 143 L846 174 L684 174 L684 205" class="line"/>
+  <path d="M748 229 L782 229" class="line"/>
+
+  <path d="M570 200 L596 200 L596 119 L620 119" class="line"/>
+
+  <path d="M620 300 L360 300" class="soft"/>
+  <text x="490" y="322" text-anchor="middle" class="small">Opposite direction uses the same sender and receiver structure.</text>
 </svg>

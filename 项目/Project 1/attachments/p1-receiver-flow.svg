@@ -1,11 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
     </marker>
     <style>
       text { font-family: Arial, sans-serif; fill: #111; }
-      .title { font-size: 19px; font-weight: 700; }
       .label { font-size: 13px; }
       .small { font-size: 12px; }
       .box { fill: #f7fbff; stroke: #2f80ed; stroke-width: 1.5; rx: 6; }
@@ -13,44 +12,46 @@
       .bad { fill: #fff1f1; stroke: #cc3333; stroke-width: 1.5; rx: 6; }
       .ok { fill: #f0fff4; stroke: #2f9e44; stroke-width: 1.5; rx: 6; }
       .line { stroke: #333; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+      .plain { stroke: #333; stroke-width: 1.4; fill: none; }
     </style>
   </defs>
-  <text x="450" y="32" text-anchor="middle" class="title">Receiver Logic in the Go-Back-N Implementation</text>
-  <rect x="340" y="65" width="220" height="45" class="box"/>
-  <text x="450" y="92" text-anchor="middle" class="label">Receive UDP datagram</text>
-  <path d="M450 110 L450 145" class="line"/>
 
-  <polygon points="450,145 570,190 450,235 330,190" class="decision"/>
-  <text x="450" y="186" text-anchor="middle" class="label">PDU decode and</text>
-  <text x="450" y="204" text-anchor="middle" class="label">CRC valid?</text>
+  <rect x="340" y="35" width="220" height="45" class="box"/>
+  <text x="450" y="62" text-anchor="middle" class="label">Receive UDP datagram</text>
+  <path d="M450 80 L450 120" class="line"/>
 
-  <path d="M330 190 L150 190 L150 285" class="line"/>
-  <text x="235" y="178" class="small">No</text>
-  <rect x="65" y="285" width="170" height="55" class="bad"/>
-  <text x="150" y="308" text-anchor="middle" class="label">Log DataErr</text>
-  <text x="150" y="326" text-anchor="middle" class="small">ACK previous expected</text>
+  <polygon points="450,120 575,165 450,210 325,165" class="decision"/>
+  <text x="450" y="161" text-anchor="middle" class="label">PDU decode and</text>
+  <text x="450" y="179" text-anchor="middle" class="label">CRC valid?</text>
 
-  <path d="M450 235 L450 275" class="line"/>
-  <text x="463" y="258" class="small">Yes</text>
-  <polygon points="450,275 585,325 450,375 315,325" class="decision"/>
-  <text x="450" y="321" text-anchor="middle" class="label">seq == expected?</text>
-  <text x="450" y="340" text-anchor="middle" class="small">and session not done</text>
+  <path d="M325 165 L165 165 L165 275" class="line"/>
+  <text x="245" y="153" class="small">No</text>
+  <rect x="80" y="275" width="170" height="55" class="bad"/>
+  <text x="165" y="298" text-anchor="middle" class="label">Log DataErr</text>
+  <text x="165" y="316" text-anchor="middle" class="small">ACK previous expected</text>
 
-  <path d="M585 325 L735 325 L735 405" class="line"/>
-  <text x="655" y="313" class="small">No</text>
-  <rect x="650" y="405" width="170" height="58" class="bad"/>
-  <text x="735" y="428" text-anchor="middle" class="label">Discard PDU</text>
-  <text x="735" y="447" text-anchor="middle" class="small">ACK previous expected</text>
+  <path d="M450 210 L450 255" class="line"/>
+  <text x="463" y="238" class="small">Yes</text>
+  <polygon points="450,255 585,305 450,355 315,305" class="decision"/>
+  <text x="450" y="301" text-anchor="middle" class="label">seq == expected?</text>
+  <text x="450" y="320" text-anchor="middle" class="small">and session not done</text>
 
-  <path d="M450 375 L450 415" class="line"/>
-  <text x="463" y="397" class="small">Yes</text>
-  <rect x="345" y="415" width="210" height="62" class="ok"/>
-  <text x="450" y="438" text-anchor="middle" class="label">Write DATA or finish file</text>
-  <text x="450" y="457" text-anchor="middle" class="small">ACK current seq, expected++</text>
+  <path d="M585 305 L730 305 L730 385" class="line"/>
+  <text x="650" y="293" class="small">No</text>
+  <rect x="645" y="385" width="170" height="58" class="bad"/>
+  <text x="730" y="408" text-anchor="middle" class="label">Discard PDU</text>
+  <text x="730" y="427" text-anchor="middle" class="small">ACK previous expected</text>
 
-  <path d="M150 340 L150 535 L450 535" class="line"/>
-  <path d="M735 463 L735 535 L450 535" class="line"/>
-  <path d="M450 477 L450 535" class="line"/>
-  <rect x="350" y="535" width="200" height="45" class="box"/>
-  <text x="450" y="562" text-anchor="middle" class="label">Wait for next PDU</text>
+  <path d="M450 355 L450 395" class="line"/>
+  <text x="463" y="377" class="small">Yes</text>
+  <rect x="345" y="395" width="210" height="62" class="ok"/>
+  <text x="450" y="418" text-anchor="middle" class="label">Write DATA or finish file</text>
+  <text x="450" y="437" text-anchor="middle" class="small">ACK current seq, expected++</text>
+
+  <path d="M165 330 L165 505 L450 505" class="plain"/>
+  <path d="M730 443 L730 505 L450 505" class="plain"/>
+  <path d="M450 457 L450 505" class="plain"/>
+  <path d="M450 505 L450 520" class="line"/>
+  <rect x="350" y="520" width="200" height="45" class="box"/>
+  <text x="450" y="547" text-anchor="middle" class="label">Wait for next PDU</text>
 </svg>

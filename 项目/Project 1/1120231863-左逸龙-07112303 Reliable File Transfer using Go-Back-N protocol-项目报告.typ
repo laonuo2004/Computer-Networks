@@ -38,12 +38,21 @@
   block(above: 1.15em, below: 0.75em)[#it]
 }
 
+#show table: set text(size: 9.6pt)
+
+#show raw.where(block: true): it => block(
+  width: 100%,
+  fill: rgb("f7f7f7"),
+  stroke: 0.55pt + rgb("d0d0d0"),
+  radius: 5pt,
+  inset: (x: 0.8em, y: 0.65em),
+  breakable: true,
+)[#it]
+
 #let info-row(label, value) = (
   text(weight: "bold")[#label],
   if value == "" { [] } else { [#value] },
 )
-
-#let source-root = "1120231863-左逸龙-07112303 Reliable File Transfer using Go-Back-N protocol-源工程"
 
 #align(center)[
   #v(3.3cm)
@@ -109,45 +118,48 @@
 
 = Requirement Analysis
 
-The goal of this project is to implement reliable file transfer on top of UDP. UDP only provides datagram delivery and does not guarantee reliable delivery, ordering, duplicate suppression, or error recovery. Therefore, the reliability mechanism must be implemented in the application layer.
+This project requires a reliable file transfer program based on UDP sockets. UDP only provides datagram delivery and does not guarantee reliable transmission. Therefore, reliability mechanisms such as checksum verification, acknowledgement, timeout, and retransmission need to be implemented at the application layer.
 
-In this project, each UDP datagram carries one self-defined PDU. The sender divides a file into data blocks, attaches protocol fields and a CRC checksum, and sends the PDUs through a UDP socket. The receiver checks the PDU, accepts only the expected sequence number, writes correct data into the output file, and sends cumulative acknowledgements. When the sender does not receive the expected acknowledgement before timeout, it retransmits the unacknowledged PDUs according to the Go-Back-N protocol.
+The main requirements and their corresponding implementation positions are listed in @tab:requirements.
 
-#align(center)[
-  #table(
-    columns: (2.8cm, 6.5cm, 4.5cm),
-    align: (left + horizon, left + horizon, left + horizon),
-    table.header([*Requirement*], [*Implementation*], [*Evidence*]),
-    [Custom PDU], [A fixed header and variable data field are defined.], [`gbn/pdu.py`],
-    [CRC checksum], [CRC-CCITT-FALSE is used to detect corrupted PDUs.], [`crc_ccitt_false()`],
-    [UDP socket], [One UDP datagram contains one encoded PDU.], [`socket.SOCK_DGRAM`],
-    [Go-Back-N], [The sender maintains a sliding window and retransmits outstanding PDUs after timeout.], [`gbn/host.py`],
-    [Full duplex], [Each host has sender and receiver threads.], [`run_demo.py`],
-    [Loss and error simulation], [The channel randomly drops or corrupts DATA/FIN PDUs.], [`gbn/channel.py`],
-    [Configuration], [Protocol and host parameters are read from JSON files.], [`configs/*.json`],
-    [Logging and analysis], [CSV logs are analyzed into summary tables and SVG charts.], [`gbn/analyzer.py`],
-  )
-]
+#figure(
+  table(
+    columns: (0.9cm, 4.2cm, 4.7cm, 4.1cm),
+    align: (center + horizon, left + horizon, left + horizon, left + horizon),
+    table.header([*No.*], [*Requirement from the project description*], [*How it is handled*], [*Evidence in source project*]),
+    [1], [Define a PDU and add CRC-CCITT checksum.], [The program defines a fixed PDU header and calculates CRC when encoding/decoding.], [`gbn/pdu.py`],
+    [2], [Use UDP Socket API; one datagram contains one PDU.], [Each encoded PDU is sent by UDP `sendto` and read by `recvfrom`.], [`gbn/host.py`],
+    [3], [Data field should not be larger than 4 KB.], [The host checks `data_size`, and PDU encoding also checks the payload length.], [`gbn/pdu.py`, `gbn/host.py`],
+    [4], [Use Go-Back-N for reliable transfer.], [The sender keeps a window and retransmits unacknowledged PDUs after timeout.], [`gbn/host.py`],
+    [5], [Support full-duplex transfer.], [Each host has a receive loop and sender threads, so Host1 and Host2 can send at the same time.], [`run_demo.py`, `gbn/host.py`],
+    [6], [Simulate PDU loss and PDU error by configured rates.], [The channel wrapper can drop or corrupt outgoing DATA/FIN PDUs.], [`gbn/channel.py`, `configs/host1.json`],
+    [7], [Use files larger than 3 MB for testing.], [The generator creates binary test files in `data/`.], [`generate_test_file.py`],
+    [8], [Received file should be the same as the original file.], [The demo writes received files into `received/` for later checking.], [`run_demo.py`],
+    [9], [Use configuration files.], [Host parameters and peer information are stored in JSON files.], [`configs/*.json`],
+    [10], [Record communication status and analyze logs.], [CSV logs are generated and then summarized by an analysis script.], [`gbn/logging_utils.py`, `analyze_logs.py`],
+  ),
+  caption: [Main project requirements used in this implementation.]
+) <tab:requirements>
 
-The expected output is a received file that is byte-by-byte identical to the original file. In the tests, this was verified by SHA-256 hash comparison.
+The expected output of the system includes received files, communication records, and analysis results generated from these records.
 
 = Design
 
 == System Model
 
-The system contains multiple hosts. Each host can send files to its configured peers and receive files from other peers at the same time. A sender thread reads the file, builds DATA and FIN PDUs, and sends them through an unreliable channel wrapper before the UDP socket. A receiver thread continuously receives UDP datagrams, decodes PDUs, checks CRC, updates the receive state, and sends ACK or FIN_ACK PDUs.
+The main data path is shown in @fig:system-architecture. For one direction, the sender reads the file, creates GBN DATA PDUs, adds CRC, and sends them through UDP. The receiver checks the PDU and writes accepted data into the output file. The same structure is also used in the other direction, so the program can do full-duplex transfer.
 
 #figure(
   image("attachments/p1-system-architecture.svg", width: 90%),
-  caption: [System architecture of the reliable file transfer system.]
-)
+  caption: [Main data path of the file transfer system.]
+) <fig:system-architecture>
 
 == PDU Format
 
-The PDU header is encoded with network byte order. Its fixed header size is 16 bytes. The data field is variable-length, but the implementation rejects data blocks larger than 4096 bytes.
+The PDU fields are listed in @tab:pdu-format. We used a 16-byte fixed header and a variable data field. The data field is limited to 4096 bytes.
 
-#align(center)[
-  #table(
+#figure(
+  table(
     columns: (3cm, 2.1cm, 7.2cm),
     align: (left + horizon, center + horizon, left + horizon),
     table.header([*Field*], [*Size*], [*Meaning*]),
@@ -155,77 +167,88 @@ The PDU header is encoded with network byte order. Its fixed header size is 16 b
     [Version], [1 byte], [Protocol version, currently `1`.],
     [Type], [1 byte], [`DATA`, `ACK`, `FIN`, or `FIN_ACK`.],
     [Session ID], [4 bytes], [Identifier of one file transfer session.],
-    [Seq], [2 bytes], [PDU sequence number in the configured sequence space.],
-    [Ack], [2 bytes], [Cumulative acknowledgement number.],
+    [Seq], [2 bytes], [Sequence number in the configured sequence space.],
+    [Ack], [2 bytes], [Acknowledgement number.],
     [Length], [2 bytes], [Length of the data field.],
     [Checksum], [2 bytes], [CRC-CCITT-FALSE checksum.],
     [Data], [0-4096 bytes], [File payload for DATA PDUs.],
-  )
-]
+  ),
+  caption: [PDU format used by the program.]
+) <tab:pdu-format>
 
-When encoding a PDU, the checksum field is first set to zero. Then CRC-CCITT-FALSE is calculated over the header and data. When decoding a PDU, the receiver recalculates the checksum with the checksum field zeroed. If the recalculated value is different from the received checksum, the PDU is treated as corrupted.
+When a PDU is encoded, the checksum field is first set to zero. Then the CRC value is calculated over the header and data. When a PDU is received, the same calculation is done again. If the value is different, the PDU is treated as damaged.
 
 == Go-Back-N Protocol
 
-The sender stores all sent but unacknowledged PDUs in the current sending window. The variable `base` records the first unacknowledged absolute frame number, and `next_abs` records the next frame to send. ACKs are cumulative. When an ACK matches a sequence number in the current outstanding window, `base` moves forward.
+The sender keeps all sent but unacknowledged PDUs in the current window. In the code, `base` is the first unacknowledged frame and `next_abs` is the next frame to send. ACKs are cumulative. When the sender receives a useful ACK, `base` moves forward.
 
-The receiver window size is 1. The receiver only accepts the PDU whose sequence number equals the current expected sequence number. Out-of-order DATA PDUs are discarded and not buffered. The receiver acknowledges the last correctly received in-order PDU.
+A simple timeout example is shown in @fig:gbn-sequence. If a DATA PDU is lost or damaged, later DATA PDUs are discarded by the receiver because it is still waiting for the missing sequence number. When the sender timer expires, the sender retransmits the outstanding PDUs from the first unacknowledged one.
 
 #figure(
   image("attachments/p1-gbn-sequence.svg", width: 90%),
-  caption: [Go-Back-N retransmission after a lost or corrupted DATA PDU.]
-)
+  caption: [A simple Go-Back-N timeout and retransmission example.]
+) <fig:gbn-sequence>
+
+The receiver rule is summarized in @fig:receiver-flow. The receiver window size is 1. It accepts only the expected sequence number and does not save out-of-order DATA PDUs.
 
 #figure(
   image("attachments/p1-receiver-flow.svg", width: 82%),
-  caption: [Receiver behavior with receive window size 1.]
-)
+  caption: [Receiver logic with receive window size 1.]
+) <fig:receiver-flow>
 
-The sequence number in the PDU is a modular value. The implementation uses absolute frame numbers internally and writes `absolute_number mod 2^seq_bits` into the PDU. The sending window size must satisfy `sw_size <= 2^seq_bits - 1`. This check avoids ambiguity between old and new sequence numbers after wrap-around.
+The sequence number written into the PDU is a modular number. The program still uses absolute frame numbers internally. During startup, it checks `sw_size <= 2^seq_bits - 1`.
 
 == Configuration and Error Simulation
 
-The main communication parameters are configured in JSON files. The default local ports are based on the last four digits of the student ID.
+The main configurable parameters are shown in @tab:config-params. They are stored in JSON files under `configs/`.
 
-#align(center)[
-  #table(
+#figure(
+  table(
     columns: (3.2cm, 3.1cm, 6.3cm),
     align: (left + horizon, center + horizon, left + horizon),
     table.header([*Parameter*], [*Default value*], [*Meaning*]),
     [`data_size`], [`1024`], [Bytes of file data in one DATA PDU.],
     [`seq_bits`], [`8`], [Sequence number space is `2^8`.],
-    [`sw_size`], [`8`], [Maximum number of outstanding PDUs.],
+    [`sw_size`], [`8`], [Sending window size.],
     [`init_seq_no`], [`1`], [Initial sequence number used by both sides.],
-    [`timeout_ms`], [`300`], [Timeout value of the sender base timer.],
+    [`timeout_ms`], [`300`], [Timeout value in milliseconds.],
     [`lost_rate`], [`0`], [Random DATA/FIN loss percentage.],
     [`error_rate`], [`0`], [Random DATA/FIN corruption percentage.],
     [`local_port`], [`41863`/`41864`], [UDP ports used by Host1 and Host2.],
-  )
-]
+  ),
+  caption: [Important configuration parameters.]
+) <tab:config-params>
 
-ACK and FIN_ACK PDUs are not randomly dropped or corrupted by default. This is a design choice used to focus the error simulation on data transfer. The report and tests therefore mainly analyze DATA/FIN loss and corruption. Another design note is that `InitSeqNo` is not negotiated by a handshake, so the sender and receiver configurations must use the same initial sequence number.
+In this implementation, random loss and corruption are applied to DATA and FIN packets. ACK and FIN_ACK packets are not randomly damaged or dropped. Also, `InitSeqNo` is read from the configuration file, so both sides should use the same value.
 
 = Development and Implementation
 
-The project was implemented in Python using only the standard library. No database or third-party network library is required at runtime. The tested Python version was Python 3.13.5, while Python 3.10 or later is sufficient.
+The program was developed and tested on Windows. PowerShell was used to run the commands. Python was used as the programming language, and uv was used to create the virtual environment.
 
-#align(center)[
-  #table(
-    columns: (5cm, 8cm),
-    align: (left + horizon, left + horizon),
-    table.header([*Path*], [*Responsibility*]),
-    [`gbn/pdu.py`], [PDU encoding, decoding, CRC, and sequence number utilities.],
-    [`gbn/host.py`], [Host configuration, sender logic, receiver logic, ACK handling, and file hashing.],
-    [`gbn/channel.py`], [Random packet loss and corruption simulation.],
-    [`gbn/logging_utils.py`], [CSV logging of send and receive events.],
-    [`gbn/analyzer.py`], [Log statistics, Markdown summary, and SVG charts.],
-    [`run_demo.py`], [Starts Host1 and Host2 in one process for local full-duplex testing.],
-    [`run_host.py`], [Starts one host from a JSON configuration file.],
-    [`tests/test_pdu.py`], [Unit tests for CRC, PDU round trip, checksum failure, and sequence wrap-around.],
-  )
-]
+The important files in the source project are shown below.
 
-The PDU implementation uses `struct.Struct("!HBBIHHHH")`. This format matches the header fields described in the design section. A corrupted PDU raises `PDUError` during decoding.
+```text
+source project/
+├── gbn/                         // main protocol package
+│   ├── pdu.py                   // PDU format, CRC, and sequence helpers
+│   ├── host.py                  // sender, receiver, ACK, timeout, file writing
+│   ├── channel.py               // random loss and corruption simulation
+│   ├── logging_utils.py         // CSV communication records
+│   └── analyzer.py              // statistics from communication records
+├── configs/                     // JSON configuration files
+│   ├── host1.json               // Host1 parameters and peers
+│   ├── host2.json               // Host2 parameters and peers
+│   ├── host3.json               // optional multi-host configuration
+│   └── host4.json               // optional multi-host configuration
+├── tests/
+│   └── test_pdu.py              // unit tests for PDU and sequence helpers
+├── run_demo.py                  // local full-duplex demo for Host1 and Host2
+├── run_host.py                  // start one host from one configuration file
+├── analyze_logs.py              // run log analysis
+└── generate_test_file.py        // generate binary test files
+```
+
+The CRC code is in `gbn/pdu.py`. We used the standard CRC-CCITT-FALSE initial value and polynomial.
 
 ```python
 def crc_ccitt_false(data: bytes) -> int:
@@ -240,7 +263,7 @@ def crc_ccitt_false(data: bytes) -> int:
     return crc
 ```
 
-The sender uses one base timer. If the timer expires, it logs a timeout event and retransmits all PDUs from `base` to `next_abs - 1`, which is the outstanding window.
+The timeout part is in `gbn/host.py`. When the timer expires, the sender sends the current outstanding window again.
 
 ```python
 if timer_started is not None and time.monotonic() - timer_started >= self.timeout:
@@ -250,109 +273,139 @@ if timer_started is not None and time.monotonic() - timer_started >= self.timeou
     timer_started = time.monotonic()
 ```
 
-The CSV log contains enough information to reconstruct the transfer process.
-
-#align(center)[
-  #table(
-    columns: (3.1cm, 9.8cm),
-    align: (left + horizon, left + horizon),
-    table.header([*Log field*], [*Meaning*]),
-    [`timestamp`], [Wall-clock timestamp of the event.],
-    [`host_id`, `peer_id`], [Local host and peer host identifiers.],
-    [`session_id`], [Transfer session identifier.],
-    [`direction`, `event`], [Whether the row is send/receive and PDU/ACK/timeout.],
-    [`pdu_type`], [`DATA`, `ACK`, `FIN`, or `FIN_ACK`.],
-    [`seq`, `ack`], [PDU sequence number and acknowledgement number.],
-    [`status`], [`New`, `TO`, `OK`, `NoErr`, or `DataErr`.],
-    [`base`, `next_seq`, `expected_seq`], [Sender and receiver protocol states.],
-    [`bytes`, `note`], [Payload length and channel note such as lost/error.],
-  )
-]
-
 = System Deployment, Startup, and Use
 
-The source project directory contains a virtual environment and all required scripts. The following commands are run in the source directory.
+The following commands are written for PowerShell. First create and activate the uv environment in the source project directory.
 
 ```bash
-python3 -m venv .venv
-./.venv/bin/python --version
-./.venv/bin/python generate_test_file.py data/host1.bin
-./.venv/bin/python generate_test_file.py data/host2.bin --seed 202
+uv venv --prompt "Project-1"
+.\.venv\Scripts\Activate.ps1
 ```
 
-The local full-duplex demo starts Host1 and Host2 in one process. Host1 sends `data/host1.bin` to Host2, and Host2 sends `data/host2.bin` to Host1.
+Then generate two test files. Each generated file is larger than 3 MB.
 
 ```bash
-./.venv/bin/python run_demo.py --clean
-./.venv/bin/python analyze_logs.py --log-dir logs --output-dir results
+python generate_test_file.py data/host1.bin
+python generate_test_file.py data/host2.bin --seed 202
+```
+
+The key fields in `configs/host1.json` are shown below.
+
+```json
+{
+  "host_id": "Host1",
+  "local_ip": "127.0.0.1",
+  "local_port": 41863,
+  "data_size": 1024,
+  "seq_bits": 8,
+  "sw_size": 8,
+  "init_seq_no": 1,
+  "timeout_ms": 300,
+  "error_rate": 0,
+  "lost_rate": 0,
+  "peers": [
+    {
+      "peer_id": "Host2",
+      "peer_ip": "127.0.0.1",
+      "peer_port": 41864,
+      "send_file": "data/host1.bin",
+      "receive_file": "received/from_host2.bin"
+    }
+  ]
+}
+```
+
+For the local demo, run:
+
+```bash
+python run_demo.py --clean
+python analyze_logs.py --log-dir logs --output-dir results
 ```
 
 #figure(
-  image("attachments/p1-run-demo-screenshot.svg", width: 90%),
-  caption: [Terminal output of the local full-duplex demo.]
-)
+  image("attachments/p1-run-demo-screenshot.png", width: 92%),
+  caption: [PowerShell output of the local full-duplex demo.],
+) <fig:run-demo-screenshot>
 
-The hosts can also be started manually in two terminals.
+The hosts can also be started manually in two terminals:
 
 ```bash
-./.venv/bin/python run_host.py configs/host1.json
-./.venv/bin/python run_host.py configs/host2.json
+# Terminal 1
+python run_host.py configs/host1.json
+
+# Terminal 2
+python run_host.py configs/host2.json
 ```
-
-#figure(
-  image("attachments/p1-config-screenshot.svg", width: 82%),
-  caption: [Key fields in the Host1 configuration file.]
-)
-
-After transfer, logs are written to `logs/`, received files are written to `received/`, and statistical outputs are written to `results/`.
 
 = System Test
 
 == Unit Tests
 
-The unit tests check the CRC standard vector, PDU encoding and decoding, checksum failure detection, and sequence number wrap-around window logic.
+The automatic unit tests are in `tests/test_pdu.py`. There are three test methods. The main test code is shown below.
 
-```bash
-PYTHONPATH=. ./.venv/bin/python -m unittest discover -s tests -p "test_*.py"
+```python
+class PduTests(unittest.TestCase):
+    def test_crc_standard_vector(self):
+        self.assertEqual(crc_ccitt_false(b"123456789"), 0x29B1)
+
+    def test_pdu_round_trip_and_crc_failure(self):
+        pdu = PDU(TYPE_DATA, 1234, 7, 6, b"hello")
+        encoded = bytearray(pdu.encode())
+        decoded = PDU.decode(bytes(encoded))
+        self.assertEqual(decoded, pdu)
+        encoded[-1] ^= 0x55
+        with self.assertRaises(PDUError):
+            PDU.decode(bytes(encoded))
+
+    def test_sequence_wrap_window(self):
+        self.assertEqual(seq_mod(258, 8), 2)
+        self.assertTrue(in_window(250, 250, 12, 8))
+        self.assertTrue(in_window(5, 250, 12, 8))
+        self.assertFalse(in_window(6, 250, 12, 8))
 ```
 
-#figure(
-  image("attachments/p1-unit-test-screenshot.svg", width: 90%),
-  caption: [Unit test result for PDU, CRC, and sequence number utilities.]
-)
-
-== Integrated Transfer Test
-
-The default demo transferred two files larger than 3 MB at the same time. The output files were verified by SHA-256.
+The unit tests were run in PowerShell, and the result is shown in @fig:unit-test-screenshot.
 
 #figure(
-  image("attachments/p1-sha256-screenshot.svg", width: 96%),
-  caption: [SHA-256 comparison between original and received files.]
-)
+  image("attachments/p1-unit-test-screenshot.png", width: 92%),
+  caption: [PowerShell output of the unit tests.],
+) <fig:unit-test-screenshot>
 
-#align(center)[
-  #table(
-    columns: (3cm, 3.9cm, 3.4cm, 2.3cm),
+== Integrated Checks
+
+The other checks were not all written as unit tests. They were run as integration or stress checks by changing the configuration and then running the transfer program. This is summarized in @tab:test-cases.
+
+#figure(
+  table(
+    columns: (3cm, 4.5cm, 3.4cm, 2.1cm),
     align: (left + horizon, left + horizon, left + horizon, center + horizon),
-    table.header([*Test case*], [*Configuration*], [*Actual result*], [*Status*]),
-    [Unit tests], [Default test suite], [`Ran 3 tests`, `OK`], [Passed],
-    [Full-duplex transfer], [Host1 `<->` Host2], [Both demo outputs were `OK`.], [Passed],
-    [File integrity], [Two 3 MB+ files], [Both SHA-256 pairs matched.], [Passed],
-    [Packet loss], [`lost_rate=5`, `error_rate=0`], [`retransmits=2463`, `timeouts=308`], [Passed],
-    [Packet corruption], [`lost_rate=0`, `error_rate=5`], [`DataErr=430`], [Passed],
-    [Loss and corruption], [`lost_rate=5`, `error_rate=5`], [`retransmits=5440`, `timeouts=680`, `DataErr=556`], [Passed],
-    [Maximum data size], [`data_size=4096`], [Transfer passed.], [Passed],
-    [Invalid data size], [`data_size=4097`], [`ValueError` was raised.], [Passed],
-    [Sequence wrap-around], [`seq_bits=3`, `sw_size=7`], [Transfer passed with wrap-around.], [Passed],
-    [Invalid window size], [`seq_bits=3`, `sw_size=8`], [Startup was rejected.], [Passed],
-    [Multi-host transfer], [Host1 to Host2/3/4], [All received files matched Host1 source file.], [Passed],
-  )
-]
+    table.header([*Test item*], [*How it was tested*], [*Expected result*], [*Result*]),
+    [Unit tests], [Run `tests/test_pdu.py` through unittest.], [All tests pass.], [Passed],
+    [Full-duplex transfer], [Run Host1 and Host2 demo.], [Both directions finish.], [Passed],
+    [File equality], [Compare original and received files by SHA-256.], [Hashes are the same.], [Passed],
+    [Packet loss], [Set `lost_rate=5`, `error_rate=0`.], [Timeout and retransmission occur.], [Passed],
+    [Packet corruption], [Set `lost_rate=0`, `error_rate=5`.], [CRC errors are recorded.], [Passed],
+    [Loss and corruption], [Set both rates to 5%.], [Transfer still completes.], [Passed],
+    [Maximum data size], [Set `data_size=4096`.], [Program can run.], [Passed],
+    [Invalid data size], [Set `data_size=4097`.], [Program rejects it.], [Passed],
+    [Sequence wrap-around], [Set `seq_bits=3`, `sw_size=7`.], [Transfer still works.], [Passed],
+    [Invalid window size], [Set `seq_bits=3`, `sw_size=8`.], [Program rejects it.], [Passed],
+    [Multi-host transfer], [Run Host1 sending to Host2, Host3, and Host4.], [All received files match.], [Passed],
+  ),
+  caption: [Main test and checking items.]
+) <tab:test-cases>
 
-The following sender log excerpt shows the main Go-Back-N behavior. The sender first sends eight new DATA PDUs. After timeout, it retransmits the whole outstanding window.
+For file equality, we used SHA-256. If the two hashes are the same, the received file is considered identical to the original file. This check is important because a transferred binary file may look successful from the terminal output, but still be wrong by a few bytes. The PowerShell hash result is shown in @fig:sha256-screenshot.
 
-#align(center)[
-  #table(
+#figure(
+  image("attachments/p1-sha256-screenshot.png", width: 92%),
+  caption: [PowerShell output of SHA-256 file hash comparison.],
+) <fig:sha256-screenshot>
+
+The sender log also shows Go-Back-N behavior. In one default run, the sender first sent DATA 1 to DATA 8. Then a timeout occurred and the sender retransmitted the outstanding window. A short excerpt is shown in @tab:sender-log.
+
+#figure(
+  table(
     columns: (2.2cm, 1.8cm, 1.8cm, 1.8cm, 1.7cm, 1.8cm),
     align: center + horizon,
     table.header([*Event*], [*Type*], [*Seq*], [*Status*], [*Base*], [*Next*]),
@@ -363,55 +416,58 @@ The following sender log excerpt shows the main Go-Back-N behavior. The sender f
     [`pdu`], [`DATA`], [`1`], [`TO`], [`0`], [`8`],
     [`pdu`], [`DATA`], [`2`], [`TO`], [`0`], [`8`],
     [`pdu`], [`DATA`], [`3`], [`TO`], [`0`], [`8`],
-  )
-]
+  ),
+  caption: [Short sender log excerpt showing timeout retransmission.]
+) <tab:sender-log>
 
 = Performance and Analysis
 
-The default full-duplex demo generated four CSV log files: two sender logs and two receiver logs. Throughput is meaningful for receiver logs because successfully received bytes are counted on the receiving side. Sender logs have `bytes_ok=0` in the analyzer output, so they should not be interpreted as zero real transfer throughput.
+The analysis result is used to compare different loss and error settings. The receiver-side throughput of the default demo is shown in @fig:throughput, and the retransmission count is shown in @fig:retransmit.
 
-#align(center)[
-  #table(
+#figure(
+  table(
     columns: (5.5cm, 2.3cm, 2.2cm, 2.4cm),
     align: (left + horizon, center + horizon, center + horizon, center + horizon),
     table.header([*Receiver log*], [*Duration*], [*Bytes OK*], [*Throughput*]),
     [`Host1_recv_Host2_ec50f047.csv`], [`17.046089 s`], [`3145851`], [`180.22 KiB/s`],
     [`Host2_recv_Host1_f4dd0758.csv`], [`16.816290 s`], [`3145851`], [`182.69 KiB/s`],
-  )
-]
+  ),
+  caption: [Receiver-side statistics in the default demo.]
+) <tab:receiver-stats>
 
 #figure(
   image("attachments/p1-throughput-receiver.svg", width: 88%),
   caption: [Receiver-side throughput in the default full-duplex demo.]
-)
+) <fig:throughput>
 
 #figure(
   image("attachments/p1-retransmit-default.svg", width: 88%),
   caption: [Retransmitted PDU count in the default full-duplex demo.]
-)
+) <fig:retransmit>
 
-The error injection tests show the expected behavior of Go-Back-N. Packet loss causes timeouts and retransmissions. Packet corruption is detected by CRC and recorded as `DataErr`. When both loss and corruption are enabled, the number of retransmissions increases because one lost or corrupted PDU can force retransmission of multiple outstanding PDUs.
+From the results, packet loss mainly increases timeout and retransmission. Packet corruption is shown by `DataErr` records. The stress-check results are listed in @tab:error-injection.
 
-#align(center)[
-  #table(
+#figure(
+  table(
     columns: (3.5cm, 1.8cm, 1.8cm, 2.2cm, 2cm, 1.8cm),
     align: center + horizon,
     table.header([*Scenario*], [*Loss*], [*Error*], [*Retransmits*], [*Timeouts*], [*DataErr*]),
     [Loss only], [`5%`], [`0%`], [`2463`], [`308`], [`0`],
     [Corruption only], [`0%`], [`5%`], [`-`], [`-`], [`430`],
     [Loss and corruption], [`5%`], [`5%`], [`5440`], [`680`], [`556`],
-  )
-]
+  ),
+  caption: [Effect of packet loss and packet corruption.]
+) <tab:error-injection>
 
-These stress tests were executed on a copied project directory during code checking, so the submitted source directory was not polluted by temporary configurations. In all tested cases, the received files matched the original files.
+These results match the behavior of Go-Back-N. Once one PDU is missed, the receiver does not keep later PDUs, so the sender may need to send several PDUs again.
 
 = Summary or Conclusions
 
-This project implemented reliable file transfer over UDP using the Go-Back-N protocol. The implementation includes a self-defined PDU format, CRC-CCITT-FALSE checksum, sliding-window sending, cumulative acknowledgements, timeout retransmission, receiver-side in-order delivery, full-duplex transfer, configurable packet loss and corruption, CSV logging, and log analysis.
+In this project, we implemented a reliable file transfer program over UDP. The main work was to define the PDU, add CRC checking, implement the Go-Back-N sender and receiver, handle timeout retransmission, and use configuration files to run different cases.
 
-The tests show that the implementation can transfer files larger than 3 MB correctly. SHA-256 comparison proved that the received files were identical to the original files. Additional tests with packet loss, packet corruption, boundary data sizes, sequence number wrap-around, invalid parameters, and multi-host transfer also passed.
+The program can transfer files larger than 3 MB in both directions. The received files were checked by SHA-256 in the test stage. Loss and corruption tests also showed that the program can recover by retransmission.
 
-The main limitation is that `InitSeqNo` must be configured consistently on both sides because there is no handshake to negotiate it. Also, ACK and FIN_ACK PDUs are not randomly lost or corrupted by default. These choices simplify the project and make the DATA transfer behavior easier to analyze.
+There are still some simple limitations. The initial sequence number should be set consistently on both hosts. Also, ACK and FIN_ACK packets are not randomly damaged or dropped in this implementation. A possible improvement is to add a small handshake to negotiate initial parameters.
 
 = References
 
@@ -419,18 +475,18 @@ The main limitation is that `InitSeqNo` must be configured consistently on both 
 
 1. Andrew S. Tanenbaum and David J. Wetherall, _Computer Networks_, 5th Edition, Prentice Hall, 2011.
 
-2. Python Software Foundation, "socket -- Low-level networking interface", Python Documentation.
+2. J. Postel, "User Datagram Protocol", RFC 768, 1980.
 
-3. Python Software Foundation, "struct -- Interpret bytes as packed binary data", Python Documentation.
+3. J. Postel, "Transmission Control Protocol", RFC 793, 1981.
 
-4. Python Software Foundation, "threading -- Thread-based parallelism", Python Documentation.
+4. R. Braden, D. Borman, and C. Partridge, "Computing the Internet Checksum", RFC 1071, 1988.
 
-5. RevEng CRC Catalogue, "CRC-16/IBM-3740", a CRC-CCITT-FALSE compatible parameter set.
+5. RevEng CRC Catalogue, "CRC-16/IBM-3740", which gives the CRC-CCITT-FALSE parameter set.
 
-6. Typst Documentation, "Typst Reference".
+6. Course project handout, "Network Programming Project-1 Reliable file transfer using Go-Back-N protocol".
 
 #set par(first-line-indent: 2em)
 
 = Comments
 
-This project helped me understand why reliability cannot be assumed when UDP is used. Implementing Go-Back-N also made the relationship between sequence numbers, cumulative ACKs, timeout retransmission, and receiver-side ordering clearer. The logging and analysis part was useful because it showed the cost of reliability under packet loss and packet corruption.
+This project is useful for understanding the difference between UDP and reliable transport. The project description could give a clearer minimum log format and also state whether ACK packets should be included in the random loss/error simulation. It would also be helpful to specify how many performance comparison cases are expected in the report.

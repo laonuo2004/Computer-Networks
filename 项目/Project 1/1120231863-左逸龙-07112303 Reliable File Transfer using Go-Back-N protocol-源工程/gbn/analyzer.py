@@ -61,22 +61,38 @@ def write_markdown_table(rows: list[dict[str, object]], path: Path) -> None:
 
 def write_svg_bar(rows: list[dict[str, object]], path: Path, field: str, title: str) -> None:
     width = 900
-    height = max(220, 48 + 34 * len(rows))
+    left = 230
+    right = 70
+    top = 28
+    row_gap = 46
+    bar_h = 18
+    height = max(120, top * 2 + row_gap * len(rows))
     values = [float(row.get(field, 0) or 0) for row in rows]
     max_value = max(values) if values else 1.0
     max_value = max(max_value, 1.0)
+    plot_w = width - left - right
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         '<rect width="100%" height="100%" fill="#ffffff"/>',
-        f'<text x="20" y="28" font-family="Arial" font-size="18" font-weight="700">{title}</text>',
+        '<style>',
+        '  text { font-family: Arial, sans-serif; fill: #111; }',
+        '  .label { font-size: 13px; }',
+        '  .value { font-size: 12px; fill: #333; }',
+        '  .guide { stroke: #e6e9ef; stroke-width: 1; }',
+        '  .bar { fill: #2f80ed; rx: 5; }',
+        '</style>',
     ]
     for i, (row, value) in enumerate(zip(rows, values)):
-        y = 54 + i * 34
-        bar_w = int((width - 330) * value / max_value)
+        y = top + i * row_gap
+        bar_w = int(plot_w * value / max_value)
         label = str(row.get("log", ""))[:36]
-        parts.append(f'<text x="20" y="{y + 17}" font-family="Arial" font-size="11">{label}</text>')
-        parts.append(f'<rect x="270" y="{y}" width="{bar_w}" height="20" fill="#2f80ed"/>')
-        parts.append(f'<text x="{278 + bar_w}" y="{y + 15}" font-family="Arial" font-size="11">{value:g}</text>')
+        parts.append(f'<text x="20" y="{y + 15}" class="label">{label}</text>')
+        parts.append(f'<line x1="{left}" y1="{y + bar_h / 2:g}" x2="{left + plot_w}" y2="{y + bar_h / 2:g}" class="guide"/>')
+        if bar_w > 0:
+            parts.append(f'<rect x="{left}" y="{y}" width="{bar_w}" height="{bar_h}" class="bar"/>')
+            value_x = min(left + bar_w + 10, width - 45)
+        else:
+            value_x = left + 8
+        parts.append(f'<text x="{value_x}" y="{y + 14}" class="value">{value:g}</text>')
     parts.append("</svg>")
     path.write_text("\n".join(parts), encoding="utf-8")
-
