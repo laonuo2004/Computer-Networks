@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="245" viewBox="0 0 980 245">
+  <rect width="980" height="245" rx="10" fill="#1e1e1e"/>
+  <rect x="0" y="0" width="980" height="34" rx="10" fill="#2d2d2d"/>
+  <circle cx="20" cy="17" r="6" fill="#ff5f56"/><circle cx="40" cy="17" r="6" fill="#ffbd2e"/><circle cx="60" cy="17" r="6" fill="#27c93f"/>
+  <text x="82" y="22" font-family="Consolas, monospace" font-size="13" fill="#dcdcdc">SHA-256 verification terminal</text>
+  <text x="24" y="64" font-family="Consolas, monospace" font-size="14" fill="#dcdcdc">$ sha256sum data/host1.bin received/from_host1.bin data/host2.bin received/from_host2.bin</text>
+  <text x="24" y="100" font-family="Consolas, monospace" font-size="13" fill="#7ee787">dcd36f1582dd0b72f11130426a20baa6f31c7f1a742dca07b6021a5215512939  data/host1.bin</text>
+  <text x="24" y="127" font-family="Consolas, monospace" font-size="13" fill="#7ee787">dcd36f1582dd0b72f11130426a20baa6f31c7f1a742dca07b6021a5215512939  received/from_host1.bin</text>
+  <text x="24" y="163" font-family="Consolas, monospace" font-size="13" fill="#7ee787">35dd3c26d3239f0891efc44b39632cd01ce45ca36022189519b200d4705132b5  data/host2.bin</text>
+  <text x="24" y="190" font-family="Consolas, monospace" font-size="13" fill="#7ee787">35dd3c26d3239f0891efc44b39632cd01ce45ca36022189519b200d4705132b5  received/from_host2.bin</text>
+</svg>

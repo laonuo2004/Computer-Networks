@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #111; }
+      .box { fill: #ffffff; stroke: #333; stroke-width: 1.4; rx: 6; }
+      .host { fill: #f7fbff; stroke: #2f80ed; stroke-width: 2; rx: 8; }
+      .sub { fill: #eef6ff; stroke: #6aa7e8; stroke-width: 1.2; rx: 5; }
+      .artifact { fill: #fff8e8; stroke: #c58b24; stroke-width: 1.2; rx: 5; }
+      .title { font-size: 19px; font-weight: 700; }
+      .label { font-size: 13px; }
+      .small { font-size: 12px; }
+      .line { stroke: #333; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+      .dash { stroke-dasharray: 6 5; }
+    </style>
+  </defs>
+
+  <text x="490" y="32" text-anchor="middle" class="title">Reliable File Transfer System over UDP</text>
+
+  <rect x="40" y="70" width="350" height="330" class="host"/>
+  <text x="215" y="100" text-anchor="middle" class="title">Host1</text>
+  <rect x="75" y="130" width="125" height="55" class="sub"/>
+  <text x="137" y="153" text-anchor="middle" class="label">Sender Thread</text>
+  <text x="137" y="171" text-anchor="middle" class="small">Go-Back-N window</text>
+  <rect x="230" y="130" width="125" height="55" class="sub"/>
+  <text x="292" y="153" text-anchor="middle" class="label">Receiver Thread</text>
+  <text x="292" y="171" text-anchor="middle" class="small">expected seq only</text>
+  <rect x="75" y="225" width="125" height="55" class="sub"/>
+  <text x="137" y="248" text-anchor="middle" class="label">Unreliable</text>
+  <text x="137" y="266" text-anchor="middle" class="small">Channel</text>
+  <rect x="230" y="225" width="125" height="55" class="sub"/>
+  <text x="292" y="248" text-anchor="middle" class="label">UDP Socket</text>
+  <text x="292" y="266" text-anchor="middle" class="small">127.0.0.1:41863</text>
+  <rect x="135" y="320" width="160" height="45" class="artifact"/>
+  <text x="215" y="348" text-anchor="middle" class="label">CSV logs</text>
+
+  <rect x="590" y="70" width="350" height="330" class="host"/>
+  <text x="765" y="100" text-anchor="middle" class="title">Host2</text>
+  <rect x="625" y="130" width="125" height="55" class="sub"/>
+  <text x="687" y="153" text-anchor="middle" class="label">Sender Thread</text>
+  <text x="687" y="171" text-anchor="middle" class="small">Go-Back-N window</text>
+  <rect x="780" y="130" width="125" height="55" class="sub"/>
+  <text x="842" y="153" text-anchor="middle" class="label">Receiver Thread</text>
+  <text x="842" y="171" text-anchor="middle" class="small">expected seq only</text>
+  <rect x="625" y="225" width="125" height="55" class="sub"/>
+  <text x="687" y="248" text-anchor="middle" class="label">Unreliable</text>
+  <text x="687" y="266" text-anchor="middle" class="small">Channel</text>
+  <rect x="780" y="225" width="125" height="55" class="sub"/>
+  <text x="842" y="248" text-anchor="middle" class="label">UDP Socket</text>
+  <text x="842" y="266" text-anchor="middle" class="small">127.0.0.1:41864</text>
+  <rect x="685" y="320" width="160" height="45" class="artifact"/>
+  <text x="765" y="348" text-anchor="middle" class="label">CSV logs</text>
+
+  <path d="M200 157 L230 157" class="line"/>
+  <path d="M137 185 L137 225" class="line"/>
+  <path d="M200 252 L230 252" class="line"/>
+  <path d="M750 157 L780 157" class="line"/>
+  <path d="M687 185 L687 225" class="line"/>
+  <path d="M750 252 L780 252" class="line"/>
+  <path d="M355 252 C450 210, 530 210, 625 252" class="line"/>
+  <path d="M780 252 C680 300, 500 300, 355 252" class="line dash"/>
+
+  <rect x="330" y="430" width="320" height="55" class="artifact"/>
+  <text x="490" y="454" text-anchor="middle" class="label">Log Analyzer</text>
+  <text x="490" y="474" text-anchor="middle" class="small">summary.csv, summary.md, throughput.svg, retransmit.svg</text>
+  <path d="M215 365 C260 420, 300 450, 330 457" class="line"/>
+  <path d="M765 365 C720 420, 680 450, 650 457" class="line"/>
+</svg>

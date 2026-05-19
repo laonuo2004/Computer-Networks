@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="540" viewBox="0 0 980 540">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #111; }
+      .title { font-size: 19px; font-weight: 700; }
+      .label { font-size: 13px; }
+      .small { font-size: 12px; }
+      .life { stroke: #555; stroke-width: 1.4; stroke-dasharray: 5 5; }
+      .msg { stroke: #333; stroke-width: 1.5; marker-end: url(#arrow); }
+      .lost { stroke: #cc3333; stroke-width: 1.6; stroke-dasharray: 6 5; marker-end: url(#arrow); }
+      .ack { stroke: #2f80ed; stroke-width: 1.5; marker-end: url(#arrow); }
+      .note { fill: #fff8e8; stroke: #c58b24; rx: 5; }
+    </style>
+  </defs>
+  <text x="490" y="32" text-anchor="middle" class="title">Go-Back-N Timeout and Retransmission</text>
+  <text x="170" y="70" text-anchor="middle" class="label">Sender</text>
+  <text x="810" y="70" text-anchor="middle" class="label">Receiver</text>
+  <line x1="170" y1="90" x2="170" y2="500" class="life"/>
+  <line x1="810" y1="90" x2="810" y2="500" class="life"/>
+
+  <line x1="170" y1="115" x2="810" y2="145" class="msg"/>
+  <text x="420" y="119" class="small">DATA seq=1</text>
+  <line x1="810" y1="165" x2="170" y2="190" class="ack"/>
+  <text x="600" y="163" class="small">ACK 1</text>
+
+  <line x1="170" y1="180" x2="620" y2="205" class="lost"/>
+  <text x="390" y="181" class="small">DATA seq=2 lost or corrupted</text>
+  <text x="650" y="205" class="small" fill="#cc3333">X</text>
+
+  <line x1="170" y1="225" x2="810" y2="255" class="msg"/>
+  <text x="420" y="228" class="small">DATA seq=3</text>
+  <line x1="810" y1="275" x2="170" y2="300" class="ack"/>
+  <text x="575" y="273" class="small">duplicate ACK 1</text>
+
+  <line x1="170" y1="290" x2="810" y2="320" class="msg"/>
+  <text x="420" y="293" class="small">DATA seq=4</text>
+  <line x1="810" y1="340" x2="170" y2="365" class="ack"/>
+  <text x="575" y="338" class="small">duplicate ACK 1</text>
+
+  <rect x="85" y="382" width="170" height="44" class="note"/>
+  <text x="170" y="407" text-anchor="middle" class="label">base timer expires</text>
+
+  <line x1="170" y1="430" x2="810" y2="455" class="msg"/>
+  <text x="398" y="431" class="small">retransmit DATA seq=2,3,4</text>
+  <line x1="810" y1="475" x2="170" y2="500" class="ack"/>
+  <text x="575" y="473" class="small">cumulative ACK 4</text>
+
+  <rect x="610" y="215" width="260" height="46" class="note"/>
+  <text x="740" y="234" text-anchor="middle" class="small">Receiver window size is 1.</text>
+  <text x="740" y="250" text-anchor="middle" class="small">Out-of-order DATA is discarded.</text>
+</svg>
