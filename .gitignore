@@ -6,3 +6,4 @@
 .codex
 *.pptx
 *.zip
+!**/1120231863ReliableFileTransfer-EXE.zip
