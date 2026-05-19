@@ -1,0 +1,25 @@
+{
+  "host_id": "Host3",
+  "local_ip": "127.0.0.1",
+  "local_port": 41865,
+  "data_size": 1024,
+  "seq_bits": 8,
+  "sw_size": 8,
+  "init_seq_no": 1,
+  "timeout_ms": 300,
+  "error_rate": 0,
+  "lost_rate": 0,
+  "random_seed": 1120231865,
+  "log_dir": "logs",
+  "receive_dir": "received",
+  "peers": [
+    {
+      "peer_id": "Host1",
+      "peer_ip": "127.0.0.1",
+      "peer_port": 41863,
+      "send_file": null,
+      "receive_file": "received/from_host1_at_host3.bin"
+    }
+  ]
+}
+

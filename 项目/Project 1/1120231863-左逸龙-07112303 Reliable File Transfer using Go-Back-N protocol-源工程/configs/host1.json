@@ -1,0 +1,39 @@
+{
+  "host_id": "Host1",
+  "local_ip": "127.0.0.1",
+  "local_port": 41863,
+  "data_size": 1024,
+  "seq_bits": 8,
+  "sw_size": 8,
+  "init_seq_no": 1,
+  "timeout_ms": 300,
+  "error_rate": 0,
+  "lost_rate": 0,
+  "random_seed": 1120231863,
+  "log_dir": "logs",
+  "receive_dir": "received",
+  "peers": [
+    {
+      "peer_id": "Host2",
+      "peer_ip": "127.0.0.1",
+      "peer_port": 41864,
+      "send_file": "data/host1.bin",
+      "receive_file": "received/from_host2.bin"
+    },
+    {
+      "peer_id": "Host3",
+      "peer_ip": "127.0.0.1",
+      "peer_port": 41865,
+      "send_file": null,
+      "receive_file": "received/from_host3.bin"
+    },
+    {
+      "peer_id": "Host4",
+      "peer_ip": "127.0.0.1",
+      "peer_port": 41866,
+      "send_file": null,
+      "receive_file": "received/from_host4.bin"
+    }
+  ]
+}
+
