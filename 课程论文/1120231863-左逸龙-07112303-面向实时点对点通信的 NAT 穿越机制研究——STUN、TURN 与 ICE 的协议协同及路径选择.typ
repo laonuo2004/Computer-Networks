@@ -19,7 +19,7 @@
   lang: "zh",
   region: "CN",
 )
-#set par(justify: true, first-line-indent: 2em, leading: 5pt, spacing: 0pt)
+#set par(justify: true, first-line-indent: 2em, leading: 10.5pt, spacing: 15pt)
 #set heading(numbering: "1.1")
 
 #set page(
@@ -88,7 +88,7 @@
 #block[
   #set text(font: "Times New Roman", size: 9pt)
   #set par(first-line-indent: 0pt)
-  *Abstract* #h(0.5em) Network address translation (NAT) permits many private hosts to share limited public IPv4 addresses, but it also removes the stable, globally reachable transport endpoint assumed by conventional peer-to-peer communication. This paper studies how real-time applications recover reachability through the coordinated use of Session Traversal Utilities for NAT (STUN), Traversal Using Relays around NAT (TURN), and Interactive Connectivity Establishment (ICE). The analysis begins with NAT mapping and filtering behavior, then explains UDP hole punching and the conditions under which a direct path can be established. STUN is examined as a mechanism for discovering server-reflexive addresses and performing connectivity checks, while TURN is treated as a reliability path that allocates relay addresses and forwards application traffic. ICE combines host, server-reflexive, peer-reflexive, and relayed candidates into prioritized candidate pairs, checks them with STUN transactions, and nominates a selected pair. A WebRTC scenario is used to connect these protocol roles with signaling, Trickle ICE, and media transmission. The paper also compares direct and relayed paths in terms of latency, reachability, server bandwidth, security, and address privacy. A lightweight browser experiment is designed to compare candidate gathering with no ICE server, a STUN server, and a STUN/TURN configuration. The resulting framework prepares and evaluates direct and relayed possibilities together, and the selected path represents a practical balance among performance, connection reliability, operating cost, and privacy.
+  *Abstract* #h(0.5em) Network address translation (NAT) permits many private hosts to share limited public IPv4 addresses, but it also removes the stable, globally reachable transport endpoint assumed by conventional peer-to-peer communication. This paper studies how real-time applications recover reachability through the coordinated use of Session Traversal Utilities for NAT (STUN), Traversal Using Relays around NAT (TURN), and Interactive Connectivity Establishment (ICE). The analysis begins with NAT mapping and filtering behavior, then explains UDP hole punching and the conditions under which a direct path can be established. STUN is examined as a mechanism for discovering server-reflexive addresses and performing connectivity checks, while TURN is treated as a reliability path that allocates relay addresses and forwards application traffic. ICE combines host, server-reflexive, peer-reflexive, and relayed candidates into prioritized candidate pairs, checks them with STUN transactions, and nominates a selected pair. A WebRTC scenario is used to connect these protocol roles with signaling, Trickle ICE, and media transmission. The paper also compares direct and relayed paths in terms of latency, reachability, server bandwidth, security, and address privacy. By treating address generation, candidate-pair checks, and nomination as one decision chain, the analysis clarifies why discovering a public mapping alone cannot guarantee a direct path. The resulting framework prepares and evaluates direct and relayed possibilities together, and the selected path represents a practical balance among performance, connection reliability, operating cost, and privacy.
 ]
 
 #v(6pt)
@@ -105,7 +105,7 @@
   #set text(font: "KaiTi", size: 10.5pt)
   #set par(first-line-indent: 0pt)
   #text(font: "SimHei", size: 9pt, weight: "bold")[摘要]
-  #h(0.5em) 网络地址转换允许多个私网终端共享有限的公网 IPv4 地址，但也使传统点对点通信失去稳定、可直接访问的传输端点。本文围绕实时点对点通信的连接建立过程，分析 NAT 映射与过滤行为、UDP 打洞以及 STUN、TURN 和 ICE 的协议协同。STUN 用于获得服务器反射地址并支持连通性检查，TURN 在直接路径不可用时提供中继地址和数据转发，ICE 则负责收集多类候选、构造候选对、执行检查并提名最终路径。本文进一步以 WebRTC 为例说明信令、Trickle ICE 与媒体路径之间的关系，并从时延、成功率、服务器成本、安全和隐私角度比较直连与中继。本文还设计浏览器候选收集实验，分别考察无 ICE 服务器、仅 STUN 和 STUN 加 TURN 三种配置。分析表明，实际 NAT 穿越会同时准备多种可能路径，再依据检查结果和优先级选择可用路径；工程实现需要在直连性能与中继可靠性之间取得平衡。
+  #h(0.5em) 网络地址转换允许多个私网终端共享有限的公网 IPv4 地址，但也使传统点对点通信失去稳定、可直接访问的传输端点。本文围绕实时点对点通信的连接建立过程，分析 NAT 映射与过滤行为、UDP 打洞以及 STUN、TURN 和 ICE 的协议协同。STUN 用于获得服务器反射地址并支持连通性检查，TURN 在直接路径不可用时提供中继地址和数据转发，ICE 则负责收集多类候选、构造候选对、执行检查并提名最终路径。本文进一步以 WebRTC 为例说明信令、Trickle ICE 与媒体路径之间的关系，并从时延、可靠性、服务器成本、安全和隐私角度比较直连与中继。全文按照地址产生、候选对检查和路径提名三个层次梳理连接建立过程，说明公网映射存在仍不能直接推出端点可达。分析表明，实际 NAT 穿越会同时准备多种可能路径，再依据检查结果和优先级选择可用路径；工程实现需要在直连性能与中继可靠性之间取得平衡。
 ]
 
 #v(6pt)
@@ -152,7 +152,7 @@
   caption: [客户端—服务器与 NAT 后点对点通信的差异 \ Client-server and peer-to-peer communication behind NATs],
 ) <fig-client-p2p>
 
-本文围绕一个完整的连接建立问题展开：两个 NAT 后端点如何发现可能使用的地址，如何验证直接路径，以及直连失败时如何借助中继继续通信。分析内容包括 NAT 的映射和过滤行为、UDP 打洞、STUN、TURN、ICE 以及 WebRTC 中的实际组合方式。讨论重点放在 UDP 实时通信；TCP 打洞、运营商级 NAT 和 IPv6 只作必要说明。全文先解释 NAT 行为和打洞条件，再分析三种协议的职责与协同，随后放入 WebRTC 场景，并通过工程比较和轻量实验说明路径选择的实际含义。
+本文围绕一个完整的连接建立问题展开：两个 NAT 后端点如何发现可能使用的地址，如何验证直接路径，以及直连失败时如何借助中继继续通信。分析内容包括 NAT 的映射和过滤行为、UDP 打洞、STUN、TURN、ICE 以及 WebRTC 中的实际组合方式。讨论重点放在 UDP 实时通信；TCP 打洞、运营商级 NAT 和 IPv6 只作必要说明。全文先解释 NAT 行为和打洞条件，再分析三种协议的职责与协同，随后放入 WebRTC 场景，并从时延、可靠性、成本、安全和隐私角度说明路径选择的实际含义。
 
 = NAT 工作原理及行为特征 <sec-nat>
 
@@ -351,6 +351,8 @@ TURN 通过 Permission 限制哪些 peer IP 可以经某个 Allocation 通信，
   caption: [ICE 候选类型比较 \ Comparison of ICE candidate types],
 ) <tab-candidates>
 
+@tab-candidates 汇总了四类候选的来源与适用范围。候选类型说明地址如何获得，最终能否使用仍要由具体候选对的连通性检查决定。
+
 双方通过应用层信令交换候选地址、候选类型、优先级、基础地址以及 ICE username fragment 和 password。ICE 只规定需要交换哪些连接参数，不规定信令必须采用 WebSocket、HTTP、SIP 或其他协议。每个本地候选与兼容的远端候选组成候选对（candidate pair）。端点依据候选优先级和角色计算候选对优先级，形成检查清单（checklist），再用 STUN Binding Request 执行连通性检查。
 
 候选对在检查过程中可经历 Frozen、Waiting、In-Progress、Succeeded 和 Failed 状态。一个端点担任 controlling agent，另一个担任 controlled agent；发生角色冲突时根据 tie-breaker 调整。成功检查证明该候选对在当前方向上可传输检查报文，ICE 还通过触发检查和响应机制建立双向可达状态。controlling agent 对成功候选对进行提名（nomination），被提名并确认的候选对成为选定候选对（selected pair），应用数据随后沿该路径传输 @rfc8445。
@@ -479,40 +481,19 @@ STUN 主要处理短小的 Binding 消息，服务器保存状态和转发流量
 
 @tab-direct-relay 反映的关系不是简单的优劣排序。直连强调路径效率和低服务器成本，中继强调在复杂网络中的可用性。ICE 同时准备两类候选并通过检查选择，正是为了在单次会话中处理这种权衡。对隐私要求高的场景可以主动牺牲部分路径效率，普通实时通话则通常先尝试直连，再保留中继候选作为保障。
 
-= 轻量实验 <sec-experiment>
+== 服务部署与路径维护
 
-== 实验目标与环境
+实际系统需要把信令、STUN 和 TURN 作为不同资源部署。信令服务面向应用会话，保存用户与房间关系；STUN 处理短小的 Binding 事务；TURN 则承担持续转发流量。三类服务可以共享运维平台，但容量规划和扩展指标不同。STUN 更关注请求速率和可用性，TURN 还要按并发 Allocation、峰值带宽和中继端口数量估算资源。若所有 TURN 节点集中在单一地域，远距离用户即使成功中继，也可能承担较长的绕行路径。较合理的做法是按用户分布设置多个接入点，通过 DNS 或应用配置选择距离合适的服务器，并保留健康检查与故障切换能力。
 
-本实验只验证 ICE 服务器配置对浏览器候选收集结果的影响，不测试媒体吞吐量、端到端时延或互联网范围的连接成功率。测试使用 WebRTC 项目的 Trickle ICE 示例页面 @trickle-ice-sample。STUN 与 TURN 服务由同一台临时 coturn 实例提供，服务器按官方配置说明启用长期凭据、独立 realm、fingerprint 和限定的 UDP 中继端口范围 @coturn。浏览器保持 `IceTransports=all`，不申请摄像头和麦克风权限，避免媒体设备差异影响候选收集。
+TURN 部署还要处理传输协议差异。UDP 中继通常更适合实时媒体，部分企业网络只允许 TCP 或 TLS 出口，此时可以提供相应监听方式作为补充。服务器应使用长期凭据或具有有效期的临时凭据，并限制 Allocation 数量、单用户带宽和可访问 peer 范围 @rfc8656。凭据有效期过长会扩大泄露后的滥用窗口，过短则可能使长会话频繁续签。应用需要在认证服务、TURN 服务器和客户端之间保持时间一致，并为续期失败提供清晰的重试路径。
 
-实验在同一浏览器、同一 Windows 网络环境和同一日期完成。三组配置分别为不设置 ICE 服务器、仅设置 STUN、同时设置 STUN 和 UDP TURN。每组独立执行三次，记录 host、srflx、relay 候选数量、传输协议、从点击 Gather candidates 到 gathering complete 的时间以及是否完成收集。完整公网地址和 TURN 密码不进入论文。
+选定候选对也不是永久状态。无线网络切换、NAT 映射过期、接口地址变化或中继节点故障都可能使原路径失效。端点需要观察 ICE 连接状态，在短时抖动与真实断路之间作区分。短暂丢包可以由检查事务和传输层恢复；网络接口已经改变时，则应触发 ICE restart，重新生成 credentials、收集候选并通过信令交换 @rfc8445 @w3c-webrtc。旧媒体路径在新路径确认前是否继续保留，取决于应用对中断时间和资源占用的要求。
 
-== 实验结果
+== 分层诊断与可观测性
 
-#figure(
-  text(size: 6.9pt)[
-    #table(
-      columns: (1.25fr, 0.5fr, 0.55fr, 0.5fr, 0.7fr, 0.8fr, 0.75fr),
-      align: (left, center, center, center, center, center, center),
-      stroke: 0.45pt,
-      table.header([实验条件], [Host], [Srflx], [Relay], [传输协议], [收集时间], [完成状态]),
-      [无 ICE 服务器（3 次）], [待实测], [待实测], [待实测], [待实测], [待实测], [待实测],
-      [仅 STUN（3 次）], [待实测], [待实测], [待实测], [待实测], [待实测], [待实测],
-      [STUN + TURN（3 次）], [待实测], [待实测], [待实测], [待实测], [待实测], [待实测],
-    )
-  ],
-  placement: top,
-  scope: "parent",
-  kind: table,
-  supplement: [表],
-  caption: [不同 ICE 服务器配置下的候选收集结果 \ Candidate gathering under different ICE server configurations],
-) <tab-experiment>
+NAT 穿越故障适合按“候选收集—候选交换—连通性检查—提名—媒体传输”分层定位。若端点没有 server-reflexive candidate，应先检查 STUN 地址、DNS、UDP 出口和 Binding Response；若没有 relay candidate，则检查 TURN 认证、Allocation 返回和中继端口范围。双方都获得候选但所有 candidate pair 失败时，问题更可能位于信令交换、credentials、地址族兼容或防火墙过滤。候选对已经 Succeeded 却没有成为 selected pair，需要继续检查 controlling/controlled 角色和 nomination；选定路径存在而媒体仍不可用，则故障已经超出 ICE 地址可达性范围。
 
-@tab-experiment 将在三组浏览器实测完成后回填。判断候选类型时以页面输出中的 `typ host`、`typ srflx` 和 `typ relay` 为准；同一网络接口可能同时产生 IPv4、IPv6 或 mDNS 形式候选，因此候选数不应直接解释为可用路径数。仅 STUN 组出现 srflx 可证明浏览器从服务器获得了公网映射观察值；STUN 加 TURN 组出现 relay 则证明 Allocation 和中继候选收集成功。这些现象仍不能证明某候选对会在真实双端会话中被提名。
-
-== 实验局限
-
-单台终端和单一接入网络只反映当前 NAT、防火墙与浏览器实现。家庭宽带、校园网和移动网络可能产生不同候选，运营商级 NAT 还会改变映射层级。浏览器可能使用 mDNS 隐藏本地地址，候选数量也会受网卡、IPv6 和接口状态影响。候选收集完成仅说明本地 ICE agent 已获得一组候选；实验没有第二个 peer，因而不观察候选对优先级、连通性检查、提名和媒体传输。本文据此只比较配置与候选类型之间的关系，不给出连接成功率和性能结论。
+可观测信息应围绕这些阶段记录，而不是只保留“连接失败”一个结果。适合记录的内容包括候选类型、基础地址类别、候选对状态变化、检查错误码、被提名的路径类型以及是否发生 ICE restart。日志中的 IP 地址、用户名片段和 TURN 凭据具有隐私或安全含义，应进行脱敏并限制保留时间。分层日志既能区分“无法获得地址”和“获得地址但检查失败”，也能避免把媒体加密、编解码或应用权限问题误判为 NAT 穿越失败。
 
 = 结论与展望 <sec-conclusion>
 
