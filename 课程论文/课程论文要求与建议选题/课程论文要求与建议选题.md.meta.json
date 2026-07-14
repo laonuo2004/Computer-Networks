@@ -1,0 +1,10 @@
+{
+  "source": "D:\\己用\\龙的文档(北理)\\大三下\\计算机网络\\课程论文\\课程论文要求与建议选题.pdf",
+  "size": 536360,
+  "mtime_ns": 1773063284000000000,
+  "base_url": "http://localhost:7860/v1beta",
+  "upload_base_url": "",
+  "model": "gemini-3.5-flash",
+  "method": "inline_pdf",
+  "generated_at": "2026-07-14T09:06:58Z"
+}
