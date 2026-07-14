@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="895" height="560" viewBox="0 0 895 560">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#3a506b"/></marker>
+    <style>.head{fill:#e9f2ff;stroke:#3a506b;stroke-width:2;rx:10}.life{stroke:#73839c;stroke-width:2;stroke-dasharray:7 6}.msg{stroke:#3a506b;stroke-width:2;marker-end:url(#arr)}.ret{stroke:#3a506b;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#arr)}.t{font:19px 'Times New Roman',serif;fill:#172238}.s{font:16px 'Times New Roman',serif;fill:#33415c}</style>
+  </defs>
+  <rect class="head" x="35" y="25" width="150" height="55"/><rect class="head" x="260" y="25" width="150" height="55"/><rect class="head" x="485" y="25" width="150" height="55"/><rect class="head" x="710" y="25" width="150" height="55"/>
+  <text class="t" x="110" y="59" text-anchor="middle">Browser</text><text class="t" x="335" y="59" text-anchor="middle">Worker</text><text class="t" x="560" y="59" text-anchor="middle">CGI executor</text><text class="t" x="785" y="59" text-anchor="middle">CGI process</text>
+  <line class="life" x1="110" y1="80" x2="110" y2="530"/><line class="life" x1="335" y1="80" x2="335" y2="530"/><line class="life" x1="560" y1="80" x2="560" y2="530"/><line class="life" x1="785" y1="80" x2="785" y2="530"/>
+  <line class="msg" x1="110" y1="130" x2="335" y2="130"/><text class="s" x="222" y="119" text-anchor="middle">POST form data</text>
+  <line class="msg" x1="335" y1="200" x2="560" y2="200"/><text class="s" x="447" y="189" text-anchor="middle">request + socket addresses</text>
+  <line class="msg" x1="560" y1="270" x2="785" y2="270"/><text class="s" x="672" y="245" text-anchor="middle">environment variables</text><text class="s" x="672" y="264" text-anchor="middle">and request body on stdin</text>
+  <line class="ret" x1="785" y1="350" x2="560" y2="350"/><text class="s" x="672" y="338" text-anchor="middle">CGI headers + HTML on stdout</text>
+  <line class="ret" x1="560" y1="420" x2="335" y2="420"/><text class="s" x="447" y="408" text-anchor="middle">parsed HTTP response</text>
+  <line class="ret" x1="335" y1="490" x2="110" y2="490"/><text class="s" x="222" y="478" text-anchor="middle">status line, headers, body</text>
+</svg>
