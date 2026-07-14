@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CGI 计算器</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <main class="page narrow">
+    <section class="card">
+      <p class="eyebrow">Dynamic Page · CGI</p>
+      <h1>四则运算计算器</h1>
+      <form method="post" action="/cgi-bin/calculator.py">
+        <label>第一个数<input type="number" step="any" name="a" required value="6"></label>
+        <label>第二个数<input type="number" step="any" name="b" required value="7"></label>
+        <fieldset>
+          <legend>运算</legend>
+          <label class="radio"><input type="radio" name="op" value="add" checked> 加</label>
+          <label class="radio"><input type="radio" name="op" value="sub"> 减</label>
+          <label class="radio"><input type="radio" name="op" value="mul"> 乘</label>
+          <label class="radio"><input type="radio" name="op" value="div"> 除</label>
+        </fieldset>
+        <button class="button" type="submit">提交计算</button>
+      </form>
+      <p><a href="/">返回首页</a></p>
+    </section>
+  </main>
+</body>
+</html>

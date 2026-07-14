@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CGI 多线程 Web 服务器</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero card">
+      <div>
+        <p class="eyebrow">BIT Computer Networks · Project 2</p>
+        <h1>CGI 多线程 Web 服务器</h1>
+        <p>这个页面由自己实现的 HTTP/1.0 服务器通过 TCP socket 返回。服务器使用固定工作线程池，并支持静态资源、CGI、访问日志和连接上限管理。</p>
+        <div class="actions">
+          <a class="button" href="/calculator.html">打开 CGI 计算器</a>
+          <a class="button secondary" href="/query.html">查询学生信息</a>
+        </div>
+      </div>
+      <img src="/assets/network.svg" alt="浏览器、线程池与 CGI 程序之间的连接示意图">
+    </section>
+    <section class="grid">
+      <article class="card"><h2>静态页面</h2><p>HTML、CSS 和 SVG 文件直接从 webroot 返回，并自动设置 MIME 类型和 Content-Length。</p></article>
+      <article class="card"><h2>动态页面</h2><p>表单数据通过 POST 传给独立 CGI 子进程，子进程生成 HTML 响应。</p></article>
+      <article class="card"><h2>并发处理</h2><p>主线程只负责接受连接，固定数量的 worker 并行处理浏览器请求。</p></article>
+    </section>
+  </main>
+</body>
+</html>

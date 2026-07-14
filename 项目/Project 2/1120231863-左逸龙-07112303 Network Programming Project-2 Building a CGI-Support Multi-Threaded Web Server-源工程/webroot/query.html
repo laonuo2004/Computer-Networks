@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>学生信息查询</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <main class="page narrow">
+    <section class="card">
+      <p class="eyebrow">Dynamic Page · CGI + SQLite</p>
+      <h1>学生信息查询</h1>
+      <form method="post" action="/cgi-bin/query.py">
+        <label>学生学号<input type="text" name="student_id" required value="1120231863" autocomplete="off"></label>
+        <button class="button" type="submit">查询</button>
+      </form>
+      <p class="hint">演示记录：1120231863、1120230001、1120230002</p>
+      <p><a href="/">返回首页</a></p>
+    </section>
+  </main>
+</body>
+</html>
